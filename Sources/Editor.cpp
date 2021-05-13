@@ -104,7 +104,16 @@ void Editor::Update(void) {
         Editor::camera.y-=Editor::commands.mouse_pos[3]*Editor::commands.sensibility;
 
     }
-    
+
+    if (Editor::commands.keys_once[Keys::SPACE]) Editor::pause=!Editor::pause;
+
+    if (!Editor::commands.keys[Keys::ARROW_RIGHT]) Editor::camera.x-=5;
+    if (!Editor::commands.keys[Keys::ARROW_LEFT]) Editor::camera.x+=5;
+    if (!Editor::commands.keys[Keys::ARROW_UP]) Editor::camera.y+=5;
+    if (!Editor::commands.keys[Keys::ARROW_DOWN]) Editor::camera.y-=5;
+
+    if (Editor::commands.keys_once[Keys::LETTER_C]) Editor::map = std::array<std::array<bool, 100>, 100>{};
+
     // CTRL + Keys
     if (Editor::commands.keys[Keys::LCTRL] || Editor::commands.keys[Keys::RCTRL]) {
 
@@ -125,13 +134,6 @@ void Editor::Update(void) {
         }
 
     }
-
-    if (Editor::commands.keys_once[Keys::SPACE]) Editor::pause=!Editor::pause;
-
-    if (!Editor::commands.keys[Keys::ARROW_RIGHT]) Editor::camera.x-=5;
-    if (!Editor::commands.keys[Keys::ARROW_LEFT]) Editor::camera.x+=5;
-    if (!Editor::commands.keys[Keys::ARROW_UP]) Editor::camera.y+=5;
-    if (!Editor::commands.keys[Keys::ARROW_DOWN]) Editor::camera.y-=5;
 
     if (Editor::camera.zoom+Editor::commands.wheel>0) {
         
