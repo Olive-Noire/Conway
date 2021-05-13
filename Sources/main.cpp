@@ -9,7 +9,7 @@ int main(int argc,char* argv[]) {
 
     Editor::Init();
 
-    constexpr std::uint32_t frameDelay(1000/200);
+    constexpr std::uint32_t frameDelay(1000/200); // 200 ticks/fps
     std::uint32_t frameStart(0),frameTime(0);
 
     while (Editor::run) {
