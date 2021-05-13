@@ -8,7 +8,7 @@ void UpdateKeys(const SDL_Event &event) noexcept {
 
     switch (event.type) {
 
-		case SDL_KEYDOWN:
+	case SDL_KEYDOWN:
         case SDL_KEYUP:
 
             switch(event.key.keysym.sym) {
@@ -248,12 +248,12 @@ void UpdateKeys(const SDL_Event &event) noexcept {
 
             }
 
-		break;
+	break;
 
-		default:
-		break;
+	default:
+	break;
 
-	}
+    }
 
     for (std::uint16_t i{0};i<240;i++) if (Editor::commands.keys[Keys(i)] && event.type == SDL_KEYDOWN && !Editor::commands.keys_once[Keys(i)]) Editor::commands.keys_once[Keys(i)] = true; // Pas tout à fait au point...
 
