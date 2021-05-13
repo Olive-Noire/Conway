@@ -104,6 +104,27 @@ void Editor::Update(void) {
         Editor::camera.y-=Editor::commands.mouse_pos[3]*Editor::commands.sensibility;
 
     }
+    
+    // CTRL + Keys
+    if (Editor::commands.keys[Keys::LCTRL] || Editor::commands.keys[Keys::RCTRL]) {
+
+        if (Editor::commands.keys_once[Keys::PLUS] || Editor::commands.keys_once[Keys::KP_PLUS]) {
+            
+            Editor::camera.zoom++;
+            Editor::camera.x-=(Editor::width/2-Editor::commands.mouse_pos[0])/Editor::camera.zoom;
+            Editor::camera.y-=(Editor::height/2-Editor::commands.mouse_pos[1])/Editor::camera.zoom;
+
+        }
+
+        if ((Editor::commands.keys_once[Keys::MINUS] || Editor::commands.keys_once[Keys::KP_MINUS]) && Editor::camera.zoom>1) {
+            
+            Editor::camera.zoom--;
+            Editor::camera.x-=(Editor::width/2-Editor::commands.mouse_pos[0])/Editor::camera.zoom;
+            Editor::camera.y-=(Editor::height/2-Editor::commands.mouse_pos[1])/Editor::camera.zoom;
+
+        }
+
+    }
 
     if (Editor::commands.keys_once[Keys::SPACE]) Editor::pause=!Editor::pause;
 
