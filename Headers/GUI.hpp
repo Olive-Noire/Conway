@@ -14,6 +14,6 @@
 #define BACKGROUND_COLOR SDL_Color{0, 0, 0, 0}
 #define RENDER_GRID false
 
-constexpr bool AABB(const SDL_Rect &a,const SDL_Rect &b) { return a.x+a.w>=b.x&&a.x<=b.x+b.w&&a.y+a.h>=b.y&&a.y<=b.y+b.h; }
+constexpr bool AABB(const SDL_Rect &a,const SDL_Rect &b) noexcept { return a.x+a.w>=b.x&&a.x<=b.x+b.w&&a.y+a.h>=b.y&&a.y<=b.y+b.h; }
 
 #endif //DEF_GUI_HPP
