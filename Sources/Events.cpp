@@ -18,12 +18,7 @@ void UpdateKeys(const SDL_Event &event) noexcept {
                 case SDLK_ESCAPE: Editor::commands.keys[Keys::ESCAPE] = (event.type == SDL_KEYDOWN); break;
                 case SDLK_BACKSPACE: Editor::commands.keys[Keys::BACKSPACE] = (event.type == SDL_KEYDOWN); break;
                 case SDLK_TAB: Editor::commands.keys[Keys::TAB] = (event.type == SDL_KEYDOWN); break;
-
-                case SDLK_SPACE:
-                Editor::commands.keys[Keys::SPACE] = (event.type == SDL_KEYDOWN);
-                if (event.type == SDL_KEYDOWN && !Editor::commands.keys_once[Keys::SPACE]) Editor::commands.keys_once[Keys::SPACE] = true;
-                break;
-
+                case SDLK_SPACE: Editor::commands.keys[Keys::SPACE] = (event.type == SDL_KEYDOWN); break;
                 case SDLK_EXCLAIM: Editor::commands.keys[Keys::EXCLAIM] = (event.type == SDL_KEYDOWN); break;
                 case SDLK_QUOTEDBL: Editor::commands.keys[Keys::QUOTEDBL] = (event.type == SDL_KEYDOWN); break;
                 case SDLK_HASH: Editor::commands.keys[Keys::HASH] = (event.type == SDL_KEYDOWN); break;
@@ -251,9 +246,9 @@ void UpdateKeys(const SDL_Event &event) noexcept {
                 case SDLK_AUDIOREWIND: Editor::commands.keys[Keys::AUDIOREWIND] = (event.type == SDL_KEYDOWN); break;
                 case SDLK_AUDIOFASTFORWARD: Editor::commands.keys[Keys::AUDIOFASTFORWARD] = (event.type == SDL_KEYDOWN); break;
 
-                for (std::uint16_t i{0};i<240;i++) if (event.type == SDL_KEYDOWN && !Editor::commands.keys_once[Keys(i)]) Editor::commands.keys_once[Keys(i)] = true; // Pas tout à fait au point...
-
             }
+
+            for (std::uint16_t i{0};i<240;i++) if (Editor::commands.keys[Keys(i)] && event.type == SDL_KEYDOWN && !Editor::commands.keys_once[Keys(i)]) Editor::commands.keys_once[Keys(i)] = true; // Pas tout à fait au point...
 
 		break;
 
