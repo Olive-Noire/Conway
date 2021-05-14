@@ -4,7 +4,7 @@
 
 void UpdateKeys(const SDL_Event &event) noexcept {
 
-    for (std::uint16_t i{0};i<240;i++) Editor::commands.keys_once[Keys{i}] = false;
+    for (std::uint16_t i{0};i<240;i++) Editor::commands.keys_once[Keys(i)] = false;
 
     switch (event.type) {
 
@@ -255,7 +255,7 @@ void UpdateKeys(const SDL_Event &event) noexcept {
 
     }
 
-    for (std::uint16_t i{0};i<240;i++) if (Editor::commands.keys[Keys{i}] && event.type == SDL_KEYDOWN && !Editor::commands.keys_once[Keys{i}]) Editor::commands.keys_once[Keys{i}] = true; // Pas tout à fait au point...
+    for (std::uint16_t i{0};i<240;i++) if (Editor::commands.keys[Keys(i)] && event.type == SDL_KEYDOWN && !Editor::commands.keys_once[Keys(i)]) Editor::commands.keys_once[Keys(i)] = true; // Pas tout à fait au point...
 
 }
 
