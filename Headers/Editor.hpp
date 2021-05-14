@@ -24,9 +24,9 @@ class Editor final {
 
     public:
     static void Init(void);
-    static void Render(void);
-    static void Update(void);
-    static void Quit(void);
+    static void Render(void) noexcept;
+    static void Update(void) noexcept;
+    static void Quit(void) noexcept;
 
     static bool run,pause;
     static std::array<std::array<bool, 100>, 100> map;
