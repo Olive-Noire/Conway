@@ -1,10 +1,10 @@
 #ifndef DEF_EVENTS_HPP
 #define DEF_EVENTS_HPP
 
-#include <SDL_events.h>
+#include "./Editor.hpp"
 
-void UpdateKeys(const SDL_Event &event) noexcept;
-void UpdateMouse(const SDL_Event &event) noexcept;
+void UpdateCommandsKeys(const SDL_Event &event, Commands &commands) noexcept;
+void UpdateCommandsMouse(const SDL_Event &event, Commands &commands) noexcept;
 
 enum Keys {
 

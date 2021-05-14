@@ -3,43 +3,58 @@
 
 #include <SDL_render.h>
 #include <SDL_events.h>
-#include <array>
+#include "./Map.hpp"
 
-struct Commands final {
+struct Commands final { // 574 bits, 71 octets
 
-    bool keys[240],keys_once[240],mouse[7];
-    std::uint16_t sensibility{1},mouse_pos[4];
+    bool keys[240];
+    bool keys_once[240];
+    bool mouse[7];
+    bool mouse_once[7];
+
+    std::uint16_t sensibility{1};
+    std::uint16_t mouse_pos[4];
+
     std::int8_t wheel;
 
 };
 
-struct Camera final {
+struct Camera final { // 48 bits, 6 octets
 
-    std::int16_t x{0},y{0};
+    std::int16_t x{0};
+    std::int16_t y{0};
+
     std::uint16_t zoom{1};
 
 };
 
-class Editor final {
+namespace Screen {
+  constexpr std::uint16_t width{700};
+  constexpr std::uint16_t height{700};
+}
+
+// !! Nécessite qu'une seule instance !! Encadre la SDL + stocke les trucs importants + Gestion de la main loop
+class Editor final { // 84864 bits, 10608 octets, 10 Ko (SDL qui prend énormément)
 
     public:
-    static void Init(void);
-    static void Render(void) noexcept;
-    static void Update(void) noexcept;
-    static void Quit(void) noexcept;
+    Editor();
+    void Render() const noexcept;
+    void Update() noexcept;
+    ~Editor() noexcept;
 
-    static bool run,pause;
-    static std::array<std::array<bool, 100>, 100> map;
-    static constexpr std::uint16_t width{700},height{700};
+    bool run;
+    bool pause;
 
-    static Camera camera;
-    static Commands commands;
+    Map<100, 100> map;
+    Camera camera;
 
-    static SDL_Renderer* renderer;
-    static SDL_Window* window;
+    SDL_Renderer* renderer;
 
     private:
-    static SDL_Event event;
+    Commands commands;
+
+    SDL_Window* window;
+    SDL_Event event;
 
 };
 
