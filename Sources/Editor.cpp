@@ -1,46 +1,40 @@
 #include "../Headers/Editor.hpp"
 
 #include <SDL.h>
+#include <iostream>
 
 #include "../Headers/Events.hpp"
 #include "../Headers/GUI.hpp"
 
-bool Editor::run,Editor::pause;
-std::array<std::array<bool, 100>, 100> Editor::map;
-
-Camera Editor::camera;
-Commands Editor::commands;
-
-SDL_Event Editor::event;
-SDL_Renderer* Editor::renderer;
-SDL_Window* Editor::window;
-
-void Editor::Init(void) {
+Editor::Editor() {
 
     if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_EVENTS | SDL_INIT_VIDEO) != 0) return;
 
-    Editor::window = SDL_CreateWindow("Conway",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,Editor::width,Editor::height,SDL_WINDOW_SHOWN);
-    Editor::renderer = SDL_CreateRenderer(Editor::window,0,SDL_RENDERER_ACCELERATED);
+    this->window = SDL_CreateWindow("Conway",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,Screen::width,Screen::height,SDL_WindowFlags::SDL_WINDOW_SHOWN);
+    this->renderer = SDL_CreateRenderer(this->window,0,SDL_RendererFlags::SDL_RENDERER_ACCELERATED);
 
-    Editor::pause = false;
-    Editor::camera.zoom = Editor::height/Editor::map[1].size();
+    this->pause = false;
+    this->camera.zoom = Screen::height/this->map.height;
 
-    Editor::run = true;
+    for (std::uint8_t i{0};i<7;i++) commands.mouse[i] = commands.mouse_once[i] = false; 
+    for (std::uint8_t i{0};i<240;i++) commands.keys[i] = commands.keys_once[i] = false; 
+
+    this->run = true;
 
 }
 
-void Editor::Render(void) {
+void Editor::Render() const noexcept {
 
-    SDL_RenderClear(Editor::renderer);
+    SDL_RenderClear(this->renderer);
 
-    for (std::size_t x{0};x<Editor::map.size();x++) for (std::size_t y{0};y<Editor::map[x].size();y++) {
+    for (std::size_t x{0};x<this->map.width;x++) for (std::size_t y{0};y<this->map.height;y++) {
 
-        const SDL_Rect cell{(signed int)x*Editor::camera.zoom-Editor::camera.x,(signed int)y*Editor::camera.zoom-Editor::camera.y,(signed int)Editor::camera.zoom,(signed int)Editor::camera.zoom};
+        const SDL_Rect cell{(signed int)x*this->camera.zoom-this->camera.x,(signed int)y*this->camera.zoom-this->camera.y,(signed int)this->camera.zoom,(signed int)this->camera.zoom};
 
-        if (Editor::map[x][y]) {
+        if (this->map.surface[x][y]) {
             
-            SDL_SetRenderDrawColor(Editor::renderer, CELL_COLOR.r, CELL_COLOR.g, CELL_COLOR.b, CELL_COLOR.a);
-            SDL_RenderFillRect(Editor::renderer, &cell);
+            SDL_SetRenderDrawColor(this->renderer, CELL_COLOR.r, CELL_COLOR.g, CELL_COLOR.b, CELL_COLOR.a);
+            SDL_RenderFillRect(this->renderer, &cell);
 
         }
 
@@ -48,140 +42,119 @@ void Editor::Render(void) {
 
     {
 
-        const SDL_Rect border{-Editor::camera.x-1,-Editor::camera.y-1,(signed int)Editor::map.size()*Editor::camera.zoom+2,(signed int)Editor::map[1].size()*Editor::camera.zoom+2};
-        SDL_SetRenderDrawColor(Editor::renderer, GRID_COLOR.r, GRID_COLOR.g, GRID_COLOR.b, GRID_COLOR.a);
-        SDL_RenderDrawRect(Editor::renderer, &border);
+        const SDL_Rect border{-this->camera.x-1,-this->camera.y-1,(signed int)this->map.width*this->camera.zoom+2,(signed int)this->map.height*this->camera.zoom+2};
+        SDL_SetRenderDrawColor(this->renderer, GRID_COLOR.r, GRID_COLOR.g, GRID_COLOR.b, GRID_COLOR.a);
+        SDL_RenderDrawRect(this->renderer, &border);
 
-        if (RENDER_GRID && Editor::camera.zoom>Editor::height/Editor::map[1].size()) {
+        if (RENDER_GRID && this->camera.zoom>ZOOM_VIEW_GRID && this->camera.zoom>1) {
         
-            for (std::size_t i{0};i<Editor::map.size();i++) SDL_RenderDrawLine(Editor::renderer, -Editor::camera.x, -Editor::camera.y+i*Editor::camera.zoom, -Editor::camera.x+Editor::map.size()*Editor::camera.zoom, -Editor::camera.y+i*Editor::camera.zoom);
-            for (std::size_t i{0};i<Editor::map[i].size();i++) SDL_RenderDrawLine(Editor::renderer, -Editor::camera.x+i*Editor::camera.zoom, -Editor::camera.y, -Editor::camera.x+i*Editor::camera.zoom, -Editor::camera.y+Editor::map[1].size()*Editor::camera.zoom);
+            for (std::size_t i{0};i<this->map.width;i++) SDL_RenderDrawLine(this->renderer, -this->camera.x, -this->camera.y+i*this->camera.zoom, -this->camera.x+this->map.width*this->camera.zoom, -this->camera.y+i*this->camera.zoom);
+            for (std::size_t i{0};i<this->map.height;i++) SDL_RenderDrawLine(this->renderer, -this->camera.x+i*this->camera.zoom, -this->camera.y, -this->camera.x+i*this->camera.zoom, -this->camera.y+this->map.height*this->camera.zoom);
 
         }
 
     }
 
-    if (AABB(SDL_Rect{Editor::commands.mouse_pos[0],Editor::commands.mouse_pos[1],1,1},SDL_Rect{-Editor::camera.x-1,-Editor::camera.y-1,(signed int)Editor::map.size()*Editor::camera.zoom,(signed int)Editor::map[1].size()*Editor::camera.zoom})) {
+    if (AABB(SDL_Rect{this->commands.mouse_pos[0],this->commands.mouse_pos[1],1,1},SDL_Rect{-this->camera.x-1,-this->camera.y-1,(signed int)this->map.width*this->camera.zoom,(signed int)this->map.height*this->camera.zoom})) {
 
-        const SDL_Rect cursor{(Editor::commands.mouse_pos[0]+Editor::camera.x)/Editor::camera.zoom*Editor::camera.zoom-Editor::camera.x,(Editor::commands.mouse_pos[1]+Editor::camera.y)/Editor::camera.zoom*Editor::camera.zoom-Editor::camera.y,(signed int)Editor::camera.zoom,(signed int)Editor::camera.zoom};
-        SDL_SetRenderDrawColor(Editor::renderer, CURSOR_COLOR.r, CURSOR_COLOR.g, CURSOR_COLOR.b, CURSOR_COLOR.a);
-        SDL_RenderDrawRect(Editor::renderer, &cursor);
-
-    }
-
-    if (Editor::pause) {
-
-        const SDL_Rect bar1{Editor::width-40,Editor::height-40,10,30},bar2{Editor::width-20,Editor::height-40,10,30};
-        SDL_SetRenderDrawColor(Editor::renderer, PAUSE_COLOR.r, PAUSE_COLOR.g, PAUSE_COLOR.b, PAUSE_COLOR.a);
-        SDL_RenderFillRect(Editor::renderer, &bar1);
-        SDL_RenderFillRect(Editor::renderer, &bar2);
+        const SDL_Rect cursor{(this->commands.mouse_pos[0]+this->camera.x)/this->camera.zoom*this->camera.zoom-this->camera.x,(this->commands.mouse_pos[1]+this->camera.y)/this->camera.zoom*this->camera.zoom-this->camera.y,(signed int)this->camera.zoom,(signed int)this->camera.zoom};
+        SDL_SetRenderDrawColor(this->renderer, CURSOR_COLOR.r, CURSOR_COLOR.g, CURSOR_COLOR.b, CURSOR_COLOR.a);
+        SDL_RenderDrawRect(this->renderer, &cursor);
 
     }
 
-    SDL_SetRenderDrawColor(Editor::renderer, BACKGROUND_COLOR.r, BACKGROUND_COLOR.g, BACKGROUND_COLOR.b, BACKGROUND_COLOR.a);
-    SDL_RenderPresent(Editor::renderer);
+    if (pause) {
+
+        const SDL_Rect bar1{Screen::width-40,Screen::height-40,10,30},bar2{Screen::width-20,Screen::height-40,10,30};
+        SDL_SetRenderDrawColor(this->renderer, PAUSE_COLOR.r, PAUSE_COLOR.g, PAUSE_COLOR.b, PAUSE_COLOR.a);
+        SDL_RenderFillRect(this->renderer, &bar1);
+        SDL_RenderFillRect(this->renderer, &bar2);
+
+    }
+
+    SDL_SetRenderDrawColor(this->renderer, BACKGROUND_COLOR.r, BACKGROUND_COLOR.g, BACKGROUND_COLOR.b, BACKGROUND_COLOR.a);
+    SDL_RenderPresent(this->renderer);
 
 }
 
-void Editor::Update(void) {
+void Editor::Update() noexcept {
 
-    SDL_PollEvent(&Editor::event);
-    if (Editor::event.type == SDL_QUIT || Editor::event.type == SDL_WINDOWEVENT_CLOSE) Editor::run = false;
+    SDL_PollEvent(&this->event);
+    if (this->event.type == SDL_EventType::SDL_QUIT || this->event.type == SDL_WindowEventID::SDL_WINDOWEVENT_CLOSE) this->run = false;
 
-    UpdateKeys(Editor::event);
-    UpdateMouse(Editor::event);
+    UpdateCommandsKeys(this->event, this->commands);
+    UpdateCommandsMouse(this->event, this->commands);
 
-    if (Editor::commands.mouse[SDL_BUTTON_LEFT] && AABB(SDL_Rect{Editor::commands.mouse_pos[0],Editor::commands.mouse_pos[1],1,1},SDL_Rect{-Editor::camera.x-1,-Editor::camera.y-1,(signed int)Editor::map.size()*Editor::camera.zoom+2,(signed int)Editor::map[1].size()*Editor::camera.zoom+2})) {
+    // Met/enlève une cellule
+    if (this->commands.mouse_once[SDL_BUTTON_LEFT] && AABB(SDL_Rect{this->commands.mouse_pos[0],this->commands.mouse_pos[1],1,1},SDL_Rect{-this->camera.x-1,-this->camera.y-1,(signed int)this->map.width*this->camera.zoom+2,(signed int)this->map.height*this->camera.zoom+2})) {
 
-        Editor::map[(Editor::commands.mouse_pos[0]+Editor::camera.x)/Editor::camera.zoom][(Editor::commands.mouse_pos[1]+Editor::camera.y)/Editor::camera.zoom] = !Editor::map[(Editor::commands.mouse_pos[0]+Editor::camera.x)/Editor::camera.zoom][(Editor::commands.mouse_pos[1]+Editor::camera.y)/Editor::camera.zoom];
-        Editor::commands.mouse[SDL_BUTTON_LEFT] = false;
-
-    }
-
-    if (Editor::commands.mouse[SDL_BUTTON_RIGHT]) {
-
-        Editor::camera.x-=Editor::commands.mouse_pos[2]*Editor::commands.sensibility;
-        Editor::camera.y-=Editor::commands.mouse_pos[3]*Editor::commands.sensibility;
+        this->map.surface[(this->commands.mouse_pos[0]+this->camera.x)/this->camera.zoom][(this->commands.mouse_pos[1]+this->camera.y)/this->camera.zoom] = !this->map.surface[(this->commands.mouse_pos[0]+this->camera.x)/this->camera.zoom][(this->commands.mouse_pos[1]+this->camera.y)/this->camera.zoom];
 
     }
 
-    if (Editor::commands.keys_once[Keys::SPACE]) Editor::pause=!Editor::pause;
+    // Déplace la caméra à l'aide de la souris
+    if (this->commands.mouse[SDL_BUTTON_RIGHT]) {
 
-    if (!Editor::commands.keys[Keys::ARROW_RIGHT]) Editor::camera.x-=5;
-    if (!Editor::commands.keys[Keys::ARROW_LEFT]) Editor::camera.x+=5;
-    if (!Editor::commands.keys[Keys::ARROW_UP]) Editor::camera.y+=5;
-    if (!Editor::commands.keys[Keys::ARROW_DOWN]) Editor::camera.y-=5;
+        this->camera.x-=this->commands.mouse_pos[2]*this->commands.sensibility;
+        this->camera.y-=this->commands.mouse_pos[3]*this->commands.sensibility;
 
-    if (Editor::commands.keys_once[Keys::LETTER_C]) Editor::map = std::array<std::array<bool, 100>, 100>{};
+    }
+
+    // Met/enlève pause
+    if (this->commands.keys_once[Keys::SPACE]) this->pause=!this->pause;
+
+    // Déplace la caméra à l'aide des flècehs
+    if (!this->commands.keys[Keys::ARROW_RIGHT]) this->camera.x-=5;
+    if (!this->commands.keys[Keys::ARROW_LEFT]) this->camera.x+=5;
+    if (!this->commands.keys[Keys::ARROW_UP]) this->camera.y+=5;
+    if (!this->commands.keys[Keys::ARROW_DOWN]) this->camera.y-=5;
+
+    // Clear la Map
+    if (this->commands.keys_once[std::uint16_t(Keys::LETTER_C)]) this->map.Clear();
 
     // CTRL + Keys
-    if (Editor::commands.keys[Keys::LCTRL] || Editor::commands.keys[Keys::RCTRL]) {
+    if (this->commands.keys[Keys::LCTRL] || this->commands.keys[Keys::RCTRL]) {
 
-        if (Editor::commands.keys_once[Keys::PLUS] || Editor::commands.keys_once[Keys::KP_PLUS]) {
+        // Zoom CTRL + PLUS
+        if (this->commands.keys_once[Keys::PLUS] || this->commands.keys_once[Keys::KP_PLUS]) {
             
-            Editor::camera.zoom++;
-            Editor::camera.x-=(Editor::width/2-Editor::commands.mouse_pos[0])/Editor::camera.zoom;
-            Editor::camera.y-=(Editor::height/2-Editor::commands.mouse_pos[1])/Editor::camera.zoom;
+            this->camera.zoom++;
+            this->camera.x-=(Screen::width/2-this->commands.mouse_pos[0])/this->camera.zoom;
+            this->camera.y-=(Screen::height/2-this->commands.mouse_pos[1])/this->camera.zoom;
 
         }
 
-        if ((Editor::commands.keys_once[Keys::MINUS] || Editor::commands.keys_once[Keys::KP_MINUS]) && Editor::camera.zoom>1) {
+        // Dezoom CTRL + MINUS
+        if ((this->commands.keys_once[Keys::MINUS] || this->commands.keys_once[Keys::KP_MINUS]) && this->camera.zoom>1) {
             
-            Editor::camera.zoom--;
-            Editor::camera.x-=(Editor::width/2-Editor::commands.mouse_pos[0])/Editor::camera.zoom;
-            Editor::camera.y-=(Editor::height/2-Editor::commands.mouse_pos[1])/Editor::camera.zoom;
+            this->camera.zoom--;
+            this->camera.x-=(Screen::width/2-this->commands.mouse_pos[0])/this->camera.zoom;
+            this->camera.y-=(Screen::height/2-this->commands.mouse_pos[1])/this->camera.zoom;
 
         }
 
     }
 
-    if (Editor::camera.zoom+Editor::commands.wheel>0) {
+    // Zoom/Dezoom avec le scroll
+    if (this->camera.zoom+this->commands.wheel>0) {
         
-        Editor::camera.zoom+=Editor::commands.wheel;
-        Editor::camera.x-=Editor::commands.wheel*(Editor::width/2-Editor::commands.mouse_pos[0])/Editor::camera.zoom;
-        Editor::camera.y-=Editor::commands.wheel*(Editor::height/2-Editor::commands.mouse_pos[1])/Editor::camera.zoom;
+        this->camera.zoom+=this->commands.wheel;
+        this->camera.x-=this->commands.wheel*(Screen::width/2-this->commands.mouse_pos[0])/this->camera.zoom;
+        this->camera.y-=this->commands.wheel*(Screen::height/2-this->commands.mouse_pos[1])/this->camera.zoom;
 
     }
 
-    if (!Editor::pause || Editor::commands.keys[Keys::LETTER_N]) {
+    // Si il n'y a pas pause ou si la touche "n" (next) est préssé alors la map passe un tick
+    if (!this->pause || this->commands.keys_once[Keys::LETTER_N]) this->map.Update();
 
-        if (Editor::commands.keys[Keys::LETTER_N]) Editor::commands.keys[Keys::LETTER_N] = false;
-
-        std::array<std::array<bool, Editor::map[1].size()>, Editor::map.size()> next;
-
-        for (std::size_t x{0};x<Editor::map.size();x++) for (std::size_t y{0};y<Editor::map[x].size();y++) {
-
-            std::uint8_t adjacents{0};
-
-            if (x < Editor::map.size() && Editor::map[x+1][y]) adjacents++;
-            if (x > 0 && Editor::map[x-1][y]) adjacents++;
-            if (y < Editor::map[1].size() && Editor::map[x][y+1]) adjacents++;
-            if (y > 0 && Editor::map[x][y-1]) adjacents++;
-
-            if (x < Editor::map.size() && y < Editor::map[1].size() && Editor::map[x+1][y+1]) adjacents++;
-            if (x > 0 && y < Editor::map[1].size()-1 && Editor::map[x-1][y+1]) adjacents++;
-            if (x < Editor::map.size()-1 && y > 0 && Editor::map[x+1][y-1]) adjacents++;
-            if (x > 0 && y > 0 && Editor::map[x-1][y-1]) adjacents++;
-
-            // Règles ;)
-            next[x][y] = false;
-            if (!Editor::map[x][y] && adjacents == 3) next[x][y] = true;
-            if (Editor::map[x][y] && (adjacents == 2 || adjacents == 3)) next[x][y] = true;
-
-        }
-
-        Editor::map = next;
-
-    }
-
-    Editor::event = SDL_Event{};
+    this->event = SDL_Event{};
 
 }
 
-void Editor::Quit(void) {
+Editor::~Editor() noexcept {
 
-    SDL_DestroyRenderer(Editor::renderer);
-    SDL_DestroyWindow(Editor::window);
+    SDL_DestroyRenderer(this->renderer);
+    SDL_DestroyWindow(this->window);
     SDL_Quit();
 
 }

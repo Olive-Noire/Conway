@@ -5,26 +5,38 @@
 
 int main(int argc,char* argv[]) {
 
-    for (unsigned int i(argc-1);i>0;i--) std::cout << argc-i << " - " << argv[(argc-i)] << std::endl;
+    for (std::uint8_t i(argc-1);i>0;i--) std::cout << argc-i << " - " << argv[argc-i] << std::endl;
 
-    Editor::Init();
+    Editor conway;
 
     constexpr std::uint32_t frameDelay{1000/200}; // 200 ticks/fps
     std::uint32_t frameStart{0},frameTime{0};
+    //unsigned int fps_start{SDL_GetTicks()},fps{0};
 
-    while (Editor::run) {
+    std::cout << sizeof(conway) << std::endl;
+
+    while (conway.run) {
 
         frameStart = SDL_GetTicks();
 
-        Editor::Update();
-        Editor::Render();
+        conway.Update();
+        conway.Render();
+
+        /*
+        fps++;
+        if (SDL_GetTicks()>fps_start+1000) {
+
+            std::cout << fps << "\n";
+            fps = 0;
+            fps_start = SDL_GetTicks();
+
+        }
+        */
 
         frameTime = SDL_GetTicks() - frameStart;
         if (frameDelay > frameTime) SDL_Delay(frameDelay - frameTime);
 
     }
-
-    Editor::Quit();
 
     return 0;
 
