@@ -1,10 +1,8 @@
 #include "../Headers/Editor.hpp"
 
 #include <SDL.h>
-#include <iostream>
 
 #include "../Headers/Events.hpp"
-#include "../Headers/GUI.hpp"
 
 Editor::Editor() {
 
@@ -16,8 +14,20 @@ Editor::Editor() {
     this->pause = false;
     this->camera.zoom = Screen::height/this->map.height;
 
-    for (std::uint8_t i{0};i<7;i++) commands.mouse[i] = commands.mouse_once[i] = false; 
-    for (std::uint8_t i{0};i<240;i++) commands.keys[i] = commands.keys_once[i] = false; 
+    // Basic
+    this->themes.push_back(Theme{SDL_Color{255, 255, 255, 255},SDL_Color{255, 255, 255, 255},SDL_Color{255, 0, 0, 255},SDL_Color{0, 255, 0, 255},SDL_Color{0, 0, 0, 0}});
+
+    // Dark
+    this->themes.push_back(Theme{SDL_Color{44, 47, 51, 255},SDL_Color{200, 200, 200, 255},SDL_Color{255, 0, 0, 255},SDL_Color{255, 0, 0, 255},SDL_Color{0, 0, 0, 0}});
+
+    // Light
+    this->themes.push_back(Theme{SDL_Color{0, 0, 0, 255},SDL_Color{200, 200, 200, 255},SDL_Color{255, 0, 0, 255},SDL_Color{0, 255, 0, 255},SDL_Color{255, 255, 255, 255}});
+
+    // Matrix
+    this->themes.push_back(Theme{SDL_Color{0, 255, 0, 255},SDL_Color{0, 255, 0, 255},SDL_Color{255, 0, 0, 255},SDL_Color{0, 255, 0, 255},SDL_Color{0, 0, 0, 0}});
+
+    // Game Of life
+    this->themes.push_back(Theme{SDL_Color{255, 255, 0, 255},SDL_Color{153, 153, 153, 255}, SDL_Color{255, 0, 0, 255}, SDL_Color{153, 153, 153, 255}, SDL_Color{126, 126, 126, 255}});
 
     this->run = true;
 
@@ -33,7 +43,7 @@ void Editor::Render() const noexcept {
 
         if (this->map.surface[x][y]) {
             
-            SDL_SetRenderDrawColor(this->renderer, CELL_COLOR.r, CELL_COLOR.g, CELL_COLOR.b, CELL_COLOR.a);
+            SDL_SetRenderDrawColor(this->renderer, this->themes[4].cell.r, this->themes[4].cell.g, this->themes[4].cell.b, this->themes[4].cell.a);
             SDL_RenderFillRect(this->renderer, &cell);
 
         }
@@ -43,7 +53,7 @@ void Editor::Render() const noexcept {
     {
 
         const SDL_Rect border{-this->camera.x-1,-this->camera.y-1,(signed int)this->map.width*this->camera.zoom+2,(signed int)this->map.height*this->camera.zoom+2};
-        SDL_SetRenderDrawColor(this->renderer, GRID_COLOR.r, GRID_COLOR.g, GRID_COLOR.b, GRID_COLOR.a);
+        SDL_SetRenderDrawColor(this->renderer, this->themes[4].grid.r, this->themes[4].grid.g, this->themes[4].grid.b, this->themes[4].grid.a);
         SDL_RenderDrawRect(this->renderer, &border);
 
         if (RENDER_GRID && this->camera.zoom>ZOOM_VIEW_GRID && this->camera.zoom>1) {
@@ -57,8 +67,8 @@ void Editor::Render() const noexcept {
 
     if (AABB(SDL_Rect{this->commands.mouse_pos[0],this->commands.mouse_pos[1],1,1},SDL_Rect{-this->camera.x-1,-this->camera.y-1,(signed int)this->map.width*this->camera.zoom,(signed int)this->map.height*this->camera.zoom})) {
 
-        const SDL_Rect cursor{(this->commands.mouse_pos[0]+this->camera.x)/this->camera.zoom*this->camera.zoom-this->camera.x,(this->commands.mouse_pos[1]+this->camera.y)/this->camera.zoom*this->camera.zoom-this->camera.y,(signed int)this->camera.zoom,(signed int)this->camera.zoom};
-        SDL_SetRenderDrawColor(this->renderer, CURSOR_COLOR.r, CURSOR_COLOR.g, CURSOR_COLOR.b, CURSOR_COLOR.a);
+        const SDL_Rect cursor{(this->commands.mouse_pos[0]+this->camera.x)/this->camera.zoom*this->camera.zoom-this->camera.x,(this->commands.mouse_pos[1]+this->camera.y)/this->camera.zoom*this->camera.zoom-this->camera.y,(signed int)this->camera.zoom+1,(signed int)this->camera.zoom+1};
+        SDL_SetRenderDrawColor(this->renderer, this->themes[4].cursor.r, this->themes[4].cursor.g, this->themes[4].cursor.b, this->themes[4].cursor.a);
         SDL_RenderDrawRect(this->renderer, &cursor);
 
     }
@@ -66,13 +76,13 @@ void Editor::Render() const noexcept {
     if (pause) {
 
         const SDL_Rect bar1{Screen::width-40,Screen::height-40,10,30},bar2{Screen::width-20,Screen::height-40,10,30};
-        SDL_SetRenderDrawColor(this->renderer, PAUSE_COLOR.r, PAUSE_COLOR.g, PAUSE_COLOR.b, PAUSE_COLOR.a);
+        SDL_SetRenderDrawColor(this->renderer, this->themes[4].pause.r, this->themes[4].pause.g, this->themes[4].pause.b, this->themes[4].pause.a);
         SDL_RenderFillRect(this->renderer, &bar1);
         SDL_RenderFillRect(this->renderer, &bar2);
 
     }
 
-    SDL_SetRenderDrawColor(this->renderer, BACKGROUND_COLOR.r, BACKGROUND_COLOR.g, BACKGROUND_COLOR.b, BACKGROUND_COLOR.a);
+    SDL_SetRenderDrawColor(this->renderer, this->themes[4].background.r, this->themes[4].background.g, this->themes[4].background.b, this->themes[4].background.a);
     SDL_RenderPresent(this->renderer);
 
 }
@@ -86,14 +96,14 @@ void Editor::Update() noexcept {
     UpdateCommandsMouse(this->event, this->commands);
 
     // Met/enlève une cellule
-    if (this->commands.mouse_once[SDL_BUTTON_LEFT] && AABB(SDL_Rect{this->commands.mouse_pos[0],this->commands.mouse_pos[1],1,1},SDL_Rect{-this->camera.x-1,-this->camera.y-1,(signed int)this->map.width*this->camera.zoom+2,(signed int)this->map.height*this->camera.zoom+2})) {
+    if (this->commands.mouse_once[SDL_BUTTON_LEFT-1] && AABB(SDL_Rect{this->commands.mouse_pos[0],this->commands.mouse_pos[1],1,1},SDL_Rect{-this->camera.x-1,-this->camera.y-1,(signed int)this->map.width*this->camera.zoom+2,(signed int)this->map.height*this->camera.zoom+2})) {
 
         this->map.surface[(this->commands.mouse_pos[0]+this->camera.x)/this->camera.zoom][(this->commands.mouse_pos[1]+this->camera.y)/this->camera.zoom] = !this->map.surface[(this->commands.mouse_pos[0]+this->camera.x)/this->camera.zoom][(this->commands.mouse_pos[1]+this->camera.y)/this->camera.zoom];
 
     }
 
     // Déplace la caméra à l'aide de la souris
-    if (this->commands.mouse[SDL_BUTTON_RIGHT]) {
+    if (this->commands.mouse[SDL_BUTTON_RIGHT-1]) {
 
         this->camera.x-=this->commands.mouse_pos[2]*this->commands.sensibility;
         this->camera.y-=this->commands.mouse_pos[3]*this->commands.sensibility;
@@ -101,22 +111,22 @@ void Editor::Update() noexcept {
     }
 
     // Met/enlève pause
-    if (this->commands.keys_once[Keys::SPACE]) this->pause=!this->pause;
+    if (this->commands.keys_once[SDL_KeyCode::SDLK_SPACE]) this->pause=!this->pause;
 
-    // Déplace la caméra à l'aide des flècehs
-    if (!this->commands.keys[Keys::ARROW_RIGHT]) this->camera.x-=5;
-    if (!this->commands.keys[Keys::ARROW_LEFT]) this->camera.x+=5;
-    if (!this->commands.keys[Keys::ARROW_UP]) this->camera.y+=5;
-    if (!this->commands.keys[Keys::ARROW_DOWN]) this->camera.y-=5;
+    // Déplace la caméra à l'aide des flèches
+    if (!this->commands.keys[SDL_KeyCode::SDLK_RIGHT]) this->camera.x-=5;
+    if (!this->commands.keys[SDL_KeyCode::SDLK_LEFT]) this->camera.x+=5;
+    if (!this->commands.keys[SDL_KeyCode::SDLK_UP]) this->camera.y+=5;
+    if (!this->commands.keys[SDL_KeyCode::SDLK_DOWN]) this->camera.y-=5;
 
     // Clear la Map
-    if (this->commands.keys_once[std::uint16_t(Keys::LETTER_C)]) this->map.Clear();
+    if (this->commands.keys_once[SDL_KeyCode::SDLK_c]) this->map.Clear();
 
     // CTRL + Keys
-    if (this->commands.keys[Keys::LCTRL] || this->commands.keys[Keys::RCTRL]) {
+    if (this->commands.keys[SDL_KeyCode::SDLK_LCTRL] || this->commands.keys[SDL_KeyCode::SDLK_RCTRL]) {
 
         // Zoom CTRL + PLUS
-        if (this->commands.keys_once[Keys::PLUS] || this->commands.keys_once[Keys::KP_PLUS]) {
+        if (this->commands.keys_once[SDL_KeyCode::SDLK_PLUS] || this->commands.keys_once[SDL_KeyCode::SDLK_KP_PLUS]) {
             
             this->camera.zoom++;
             this->camera.x-=(Screen::width/2-this->commands.mouse_pos[0])/this->camera.zoom;
@@ -125,7 +135,7 @@ void Editor::Update() noexcept {
         }
 
         // Dezoom CTRL + MINUS
-        if ((this->commands.keys_once[Keys::MINUS] || this->commands.keys_once[Keys::KP_MINUS]) && this->camera.zoom>1) {
+        if ((this->commands.keys_once[SDL_KeyCode::SDLK_MINUS] || this->commands.keys_once[SDL_KeyCode::SDLK_KP_MINUS]) && this->camera.zoom>1) {
             
             this->camera.zoom--;
             this->camera.x-=(Screen::width/2-this->commands.mouse_pos[0])/this->camera.zoom;
@@ -145,7 +155,7 @@ void Editor::Update() noexcept {
     }
 
     // Si il n'y a pas pause ou si la touche "n" (next) est préssé alors la map passe un tick
-    if (!this->pause || this->commands.keys_once[Keys::LETTER_N]) this->map.Update();
+    if (!this->pause || this->commands.keys_once[SDL_KeyCode::SDLK_n]) this->map.Update();
 
     this->event = SDL_Event{};
 

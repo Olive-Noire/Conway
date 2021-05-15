@@ -14,8 +14,6 @@ int main(int argc,char* argv[]) {
     std::uint32_t frameStart{0};
     std::uint32_t frameTime{0};
 
-    std::cout << sizeof(conway) << std::endl;
-
     while (conway.run) {
 
         frameStart = SDL_GetTicks();

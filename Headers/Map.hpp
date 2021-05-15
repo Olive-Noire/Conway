@@ -30,12 +30,12 @@ class Map final { // 145 bits, 18 octets + w*h bits
 
             std::uint8_t adjacents{0};
 
-            if (x < w && this->surface[x+1][y]) adjacents++;
+            if (x < w-1 && this->surface[x+1][y]) adjacents++;
             if (x > 0 && this->surface[x-1][y]) adjacents++;
-            if (y < h && this->surface[x][y+1]) adjacents++;
+            if (y < h-1 && this->surface[x][y+1]) adjacents++;
             if (y > 0 && this->surface[x][y-1]) adjacents++;
 
-            if (x < w && y < h && this->surface[x+1][y+1]) adjacents++;
+            if (x < w-1 && y < h-1 && this->surface[x+1][y+1]) adjacents++;
             if (x > 0 && y < h-1 && this->surface[x-1][y+1]) adjacents++;
             if (x < w-1 && y > 0 && this->surface[x+1][y-1]) adjacents++;
             if (x > 0 && y > 0 && this->surface[x-1][y-1]) adjacents++;

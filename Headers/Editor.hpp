@@ -3,14 +3,18 @@
 
 #include <SDL_render.h>
 #include <SDL_events.h>
+#include <unordered_map>
+#include <vector>
+
+#include "./GUI.hpp"
 #include "./Map.hpp"
 
 struct Commands final { // 574 bits, 71 octets
 
-    bool keys[240];
-    bool keys_once[240];
-    bool mouse[7];
-    bool mouse_once[7];
+    std::unordered_map<SDL_Keycode, bool> keys;
+    std::unordered_map<SDL_Keycode, bool> keys_once;
+    std::unordered_map<std::uint8_t, bool> mouse;
+    std::unordered_map<std::uint8_t, bool> mouse_once;
 
     std::uint16_t sensibility{1};
     std::uint16_t mouse_pos[4];
@@ -45,16 +49,17 @@ class Editor final { // 84864 bits, 10608 octets, 10 Ko (SDL qui prend énormém
     bool run;
     bool pause;
 
-    Map<100, 100> map;
     Camera camera;
+    std::vector<Theme> themes;
+    Map<100, 100> map;
 
     SDL_Renderer* renderer;
 
     private:
     Commands commands;
 
-    SDL_Window* window;
     SDL_Event event;
+    SDL_Window* window;
 
 };
 
