@@ -29,3 +29,5 @@ int main(int argc,char* argv[]) {
     return 0;
 
 }
+
+// g++ -m32 "./Code/Sources/*.cpp" -o "./bin/Conway" -s -std=c++17 -I "./include/" -L "./lib/" -lSDL2main -lSDL2 -Wall -Wextra -pedantic-errors -DNDEBUG

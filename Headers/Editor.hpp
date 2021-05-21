@@ -33,8 +33,9 @@ struct Camera final { // 48 bits, 6 octets
 };
 
 namespace Screen {
-  constexpr std::uint16_t width{700};
-  constexpr std::uint16_t height{700};
+  constexpr std::uint16_t width{800};
+  static_assert(width>=120);
+  constexpr std::uint16_t height{800};
 }
 
 // !! Nécessite qu'une seule instance !! Encadre la SDL + stocke les trucs importants + Gestion de la main loop

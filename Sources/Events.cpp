@@ -27,11 +27,11 @@ void UpdateCommandsMouse(const SDL_Event &event, Commands &commands) noexcept {
     switch(event.type) {
 
         case SDL_EventType::SDL_MOUSEBUTTONDOWN:
-        commands.mouse[event.button.button-1] = commands.mouse_once[event.button.button-1] = true;
+        commands.mouse[event.button.button] = commands.mouse_once[event.button.button] = true;
         break;
 
         case SDL_EventType::SDL_MOUSEBUTTONUP:
-        commands.mouse[event.button.button-1] = false;
+        commands.mouse[event.button.button] = false;
         break;
 
         case SDL_EventType::SDL_MOUSEMOTION:
@@ -58,5 +58,19 @@ void UpdateCommandsMouse(const SDL_Event &event, Commands &commands) noexcept {
     }
 
     if (event.type != SDL_EventType::SDL_MOUSEWHEEL) commands.wheel = 0;
+
+}
+
+void UpdateWindow(const SDL_Event &event) noexcept {
+
+    switch (event.type) {
+
+        case SDL_WindowEventID::SDL_WINDOWEVENT_RESIZED:
+        break;
+    
+        default:
+        break;
+        
+    }
 
 }

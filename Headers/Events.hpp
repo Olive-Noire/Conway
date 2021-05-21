@@ -5,5 +5,6 @@
 
 void UpdateCommandsKeys(const SDL_Event &event, Commands &commands) noexcept;
 void UpdateCommandsMouse(const SDL_Event &event, Commands &commands) noexcept;
+void UpdateWindow(const SDL_Event &event) noexcept;
 
 #endif //DEF_EVENTS_HPP
